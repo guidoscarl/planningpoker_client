@@ -53,6 +53,8 @@ const Room = (props) => {
     const [newVoteAlert, setNewVoteAlert] = useState(false)
     const [openNewVoteAlert, setOpenNewVoteAlert] = useState(false)
 
+    const [isRoomAdmin, setIsRoomAdmin] = useState(false)
+
     const [votingSystem, setVotingSystem] = useState("Fibonacci")
 
     useEffect(() => {
@@ -127,6 +129,7 @@ const Room = (props) => {
             }
         });
         setUsers(arr => [...arr, { userName: userName, vote: -1 }])
+        setIsRoomAdmin(true)
         setRoomJoined(true)
     }
 
@@ -199,7 +202,7 @@ const Room = (props) => {
                         </FormControl>
                     </div>
                     <div>
-                        <Button onClick={createRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Crea room</Button>
+                        <Button disabled={userName.length > 0} onClick={createRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Crea room</Button>
                     </div>
                 </div>
             )
@@ -214,7 +217,7 @@ const Room = (props) => {
                     <TextField onChange={(event) => { setRoomName(event.target.value) }} style={{ marginTop: 20 }} id="outlined-basic" label="Codice room" variant="outlined" />
                 </div>
                 <div>
-                    <Button onClick={joinRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Join room</Button>
+                    <Button disabled={userName.length > 0} onClick={joinRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Join room</Button>
                 </div>
 
                 {
@@ -268,10 +271,13 @@ const Room = (props) => {
                     </Typography>
                     :
                     (
-                        flipCard ?
-                            <Button onClick={() => { requestNewVote() }} style={{ backgroundColor: "#147BC3", color: "white", margin: 20, height: 50, width: 250, borderRadius: 10 }} variant="outlined">Nuova votazione</Button>
-                            :
-                            <Button onClick={() => { revealCard() }} style={{ backgroundColor: "#147BC3", color: "white", margin: 20, height: 50, width: 250, borderRadius: 10 }} variant="outlined">Rivela</Button>
+                        isRoomAdmin ? (
+                            flipCard ?
+                                <Button onClick={() => { requestNewVote() }} style={{ backgroundColor: "#147BC3", color: "white", margin: 20, height: 50, width: 250, borderRadius: 10 }} variant="outlined">Nuova votazione</Button>
+                                :
+                                <Button onClick={() => { revealCard() }} style={{ backgroundColor: "#147BC3", color: "white", margin: 20, height: 50, width: 250, borderRadius: 10 }} variant="outlined">Rivela</Button>
+                        )
+                        : null                       
                     )
                 }
             </div>
