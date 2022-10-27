@@ -202,7 +202,7 @@ const Room = (props) => {
                         </FormControl>
                     </div>
                     <div>
-                        <Button disabled={userName.length > 0} onClick={createRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Crea room</Button>
+                        <Button disabled={userName.length <= 0} onClick={createRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Crea room</Button>
                     </div>
                 </div>
             )
@@ -217,7 +217,7 @@ const Room = (props) => {
                     <TextField onChange={(event) => { setRoomName(event.target.value) }} style={{ marginTop: 20 }} id="outlined-basic" label="Codice room" variant="outlined" />
                 </div>
                 <div>
-                    <Button disabled={userName.length > 0} onClick={joinRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Join room</Button>
+                    <Button disabled={userName.length <= 0} onClick={joinRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Join room</Button>
                 </div>
 
                 {
