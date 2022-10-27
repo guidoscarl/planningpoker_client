@@ -1,0 +1,1 @@
+var ROOM_NOT_FOUND_MESSAGE = "Room not exists"
