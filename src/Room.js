@@ -350,7 +350,7 @@ const Room = (props) => {
             {!roomJoined ?
                 <div>
                     <Typography variant="h1" fontWeight={"bold"} component="div" gutterBottom>
-                        NTT Planning Poker
+                        Planning Poker
                     </Typography>
 
                     <Typography variant="h5" component="div" gutterBottom>
