@@ -14,7 +14,7 @@ import './Room.css'
 let socket;
 const Room = (props) => {
 
-    const ENDPOINT = "https://planningpoker-s.herokuapp.com/";
+    const ENDPOINT = "https://planningpoker-s.herokuapp.com:5000";
 
     const [users, setUsers] = useState([])
 
