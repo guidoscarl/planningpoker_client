@@ -34,7 +34,7 @@ const Room = (props) => {
     const votingSystemValues = { Fibonacci: fibonacciValues, FibonacciModificato: fibonacciModificatoValues, Potenze: potenzeValues }
 
     const [canShowCard, setCanShowCard] = useState(false);
-
+    const [ligtingButton, setLightingButton] = useState(-1);
     const [flipCard, setFlipCard] = useState(false);
 
     const [roomError, setRoomError] = useState(false)
@@ -254,7 +254,7 @@ const Room = (props) => {
 
                 <div>
                     {votingSystemValues[votingSystem].map(item => (
-                        <Button onClick={() => { sendVote(item) }} className="buttonFibonacci" style={{ backgroundColor: "white", color: "#000000", fontSize: '20px', borderColor: "#000000", margin: 10, height: 80 }} variant="outlined" disabled={flipCard}>{item}</Button>
+                        <Button onClick={() => { sendVote(item); setLightingButton(item)}} className="buttonFibonacci" style={{ backgroundColor: ligtingButton === item ? "#D7E9FF" : "white", color: "#000000", fontSize: '20px', borderColor: "#000000", margin: 10, height: 80 }} variant="outlined" disabled={flipCard}>{item}</Button>
                     ))}
                 </div>
 
