@@ -97,6 +97,7 @@ const Room = (props) => {
             setFlipCard(false)
             setNewVoteAlert(true)
             setOpenSaveVote(false)
+            setLightingButton(-1)
         })
 
         socket.on("userDisconnected", (allUsers) => {
@@ -335,7 +336,7 @@ const Room = (props) => {
             return 0;
         }
 
-        return voteSum / voteCount
+        return (voteSum / voteCount).toFixed(1)
     }
 
     const getMinVote = () => {
