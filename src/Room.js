@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, FormControl, Grid, Icon, InputLabel, MenuItem, Paper, Select, Tab, Tabs, TextField, Typography } from "@mui/material";
+import { Badge, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, FormControl, Grid, Icon, InputLabel, MenuItem, Paper, Select, Tab, Tabs, TextField, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import React, { useState, useEffect } from "react";
 import ReactCardFlip from "react-card-flip";
@@ -9,6 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import { CSVLink } from "react-csv";
+import Face5Icon from '@mui/icons-material/Face5';
 import './Room.css'
 
 let socket;
@@ -56,6 +57,10 @@ const Room = (props) => {
     const [isRoomAdmin, setIsRoomAdmin] = useState(false)
 
     const [votingSystem, setVotingSystem] = useState("Fibonacci")
+
+    const [isVisitor, setIsVisitor] = useState(false)
+
+    const [openVisitorDialog, setOpenVisitorDialog] = useState(false)
 
     useEffect(() => {
         socket = io(ENDPOINT)
@@ -137,7 +142,7 @@ const Room = (props) => {
     const checkCanReveal = (allUsers) => {
         console.log("check")
         if (allUsers.filter(user => {
-            return user.vote === -1;
+            return user.vote === -1 && !user.isVisitor;
         }).length === 0) {
             setCanShowCard(true);
         }
@@ -147,7 +152,17 @@ const Room = (props) => {
     }
 
     const joinRoom = async (event) => {
-        await socket.emit("joinRoom", { userName: userName, roomId: roomName }, (error) => {
+        setIsVisitor(false)
+        await socket.emit("joinRoom", { userName: userName, roomId: roomName, isVisitor: false }, (error) => {
+            if (error) {
+                alert(error);
+            }
+        });
+    }
+
+    const joinRoomAsVisitor = async (event) => {
+        setIsVisitor(true)
+        await socket.emit("joinRoom", { userName: userName, roomId: roomName, isVisitor:true }, (error) => {
             if (error) {
                 alert(error);
             }
@@ -209,6 +224,7 @@ const Room = (props) => {
             )
         }
 
+        else if (tabValue === 1)
         return (
             <div style={{ padding: 20 }}>
                 <div>
@@ -219,6 +235,44 @@ const Room = (props) => {
                 </div>
                 <div>
                     <Button disabled={userName.length <= 0} onClick={joinRoom} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Join room</Button>
+                </div>
+
+                {
+                    roomError ?
+                        <div>
+                            <Typography variant="h5" style={{ color: 'red' }}> Codice room errato!</Typography>
+                        </div>
+                        : null
+                }
+
+                {
+                    roomFull ?
+                        <div>
+                            <Typography variant="h5" style={{ color: 'red' }}> Room piena!</Typography>
+                        </div>
+                        : null
+                }
+
+                {
+                    UserNameAlreadyExist ?
+                        <div>
+                            <Typography variant="h5" style={{ color: 'red' }}> Username già occupato all'interno della room!</Typography>
+                        </div>
+                        : null
+                }
+            </div>
+        )
+
+        return (
+            <div style={{ padding: 20 }}>
+                <div>
+                    <TextField onChange={(event) => { setUserName(event.target.value) }} id="outlined-basic" label="Username" variant="outlined" />
+                </div>
+                <div>
+                    <TextField onChange={(event) => { setRoomName(event.target.value) }} style={{ marginTop: 20 }} id="outlined-basic" label="Codice room" variant="outlined" />
+                </div>
+                <div>
+                    <Button disabled={userName.length <= 0} onClick={joinRoomAsVisitor} style={{ backgroundColor: "white", color: "black", margin: 20 }} variant="outlined">Join room</Button>
                 </div>
 
                 {
@@ -308,7 +362,7 @@ const Room = (props) => {
     }
 
     const drawUsers = (startUserNumber, usersNumberToDraw) => {
-        var usersToDraw = users.slice(startUserNumber, usersNumberToDraw)
+        var usersToDraw = users.filter(user => {return !user.isVisitor}).slice(startUserNumber, usersNumberToDraw)
         return (
             <div style={{ display: 'flex', flexDirection: 'row' }}>
                 {
@@ -326,7 +380,7 @@ const Room = (props) => {
         let voteSum = 0.0
 
         users.forEach(user => {
-            if (user.vote !== '?') {
+            if (user.vote !== '?' && !user.isVisitor) {
                 voteSum += user.vote
                 voteCount++
             }
@@ -340,11 +394,11 @@ const Room = (props) => {
     }
 
     const getMinVote = () => {
-        return Math.min(...users.filter(obj => { return obj.vote !== "?" }).map(user => (user.vote)))
+        return Math.min(...users.filter(obj => { return obj.vote !== "?" && !obj.isVisitor}).map(user => (user.vote)))
     }
 
     const getMaxVote = () => {
-        return Math.max(...users.filter(obj => { return obj.vote !== "?" }).map(user => (user.vote)))
+        return Math.max(...users.filter(obj => { return obj.vote !== "?" && !obj.isVisitor }).map(user => (user.vote)))
     }
 
 
@@ -367,6 +421,7 @@ const Room = (props) => {
                         <Tabs value={tabValue} onChange={(event, tab) => { setTabValue(tab) }} centered textColor="black">
                             <Tab className="tab" label="Crea nuova Room" />
                             <Tab className="tab" label="Unisciti a una room esistente" />
+                            <Tab className="tab" label="Unisciti come spettatore" />
                         </Tabs>
                     </div>
                     {renderCreateOrJoin()}
@@ -376,12 +431,16 @@ const Room = (props) => {
                     <Typography color={"black"} variant="h6" component="div" gutterBottom>
                         Room id: {roomName}
                     </Typography>
-                    {drawUsers(0, 5)}
+                    {drawUsers(0, 6)}
                     {createTable()}
-                    {drawUsers(5, 10)}
-                    <div style={{ bottom: 0, position: "fixed", width: '100%', left: '50%', transform: 'translate(-50%, 0)' }}>
-                        {createFibonacciButtons()}
-                    </div>
+                    {drawUsers(6, 12)}
+                    {!isVisitor ?
+                        <div style={{ bottom: 0, position: "fixed", width: '100%', left: '50%', transform: 'translate(-50%, 0)' }}>
+                            {createFibonacciButtons()}
+                        </div>
+                        : null
+                    }
+                    
 
                     {
                         flipCard ?
@@ -453,12 +512,18 @@ const Room = (props) => {
                     }
 
                     <div style={{ position: 'fixed', bottom: 0, left: 0, padding: 5, display: 'flex', flexDirection: 'column' }}>
+                        <Fab style={{ margin: 5 }} color="primary" aria-label="add" onClick={() => {setOpenVisitorDialog(true)}}>
+                            <Badge badgeContent={users.filter(user => {return user.isVisitor}).length} color="success">
+                                <Face5Icon />
+                            </Badge> 
+                        </Fab>
                         <Fab style={{ margin: 5 }} color="primary" aria-label="add" disabled={!flipCard} onClick={() => { setOpenSaveVote(true) }}>
                             <AddIcon />
                         </Fab>
-                        <Fab style={{ margin: 5 }} color="primary" aria-label="add" onClick={() => { setopenSavedItems(true) }}>
-                            <BookmarksIcon />
-                        </Fab>
+                        
+                        <Fab style={{ margin: 5 }} color="primary" aria-label="add" onClick={() => { setopenSavedItems(true) }}>                            
+                            <BookmarksIcon />               
+                        </Fab>       
                     </div>
 
                     <Dialog open={openSaveVote}>
@@ -481,8 +546,33 @@ const Room = (props) => {
                             <Button onClick={() => { saveVote(itemName, getVoteAverage(), getMinVote(), getMaxVote()); setOpenSaveVote(false); }}>Salva</Button>
                             <Button onClick={() => { setOpenSaveVote(false) }}>Esci</Button>
                         </DialogActions>
+
                     </Dialog>
 
+                        
+                    <Dialog open = {openVisitorDialog} fullWidth={true}>
+                        <DialogTitle> Spettatori Room </DialogTitle>
+                        <DialogContent>
+                            <Grid container style={{ textAlign: 'center' }}>
+                                {
+                                    users.filter(user => {return user.isVisitor}).map(user => {
+                                        return (
+                                            <Grid item xs={12} sm={12} lg={12} md={12}>
+                                                <Paper style={{ textAlign: 'center' }}>
+                                                    <Typography variant="h7" color="text.primary" component="div">
+                                                        {user.userName}
+                                                    </Typography>
+                                                </Paper>
+                                            </Grid>
+                                        )
+                                    })
+                                }
+                            </Grid>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => { setOpenVisitorDialog(false) }}>Esci</Button>
+                        </DialogActions>
+                    </Dialog>
                     <Dialog open={openSavedItems} fullWidth={true}>
                         <DialogTitle style={{ textAlign: 'center' }}>Item salvati</DialogTitle>
                         <DialogContent>
